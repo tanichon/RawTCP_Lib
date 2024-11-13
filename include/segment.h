@@ -1,47 +1,26 @@
-#ifndef HEADER_SEGMENT
-#define HEADER_SEGMENT
+#ifndef __SEGMENT_H__
+#define __SEGMENT_H__
 
 #ifndef _DEFAULT_SOURCE
 #define _DEFAULT_SOURCE
 #endif
 
 #include <netinet/tcp.h>
-/**
- * TCP Segment definition
- * 
- * @author h3xduck
- * @version 1.0
- * @see
- */ 
+#include <stdint.h>
 
-/**
- * For the calculation of the checksum, TCP uses some data from the network layer. 
- * Thus we must consider the so called pseudo header.
- */
-struct pseudo_header{
-    u_int32_t source_address;
-    u_int32_t dest_address;
-    u_int8_t reserved; 
-    u_int8_t protocol_type;
-    u_int16_t segment_length;
-    
+struct pseudo_hdr {
+    uint32_t src_ip;
+    uint32_t dst_ip;
+    uint8_t reserved; 
+    uint8_t protocol_type;
+    uint16_t segment_length;    
 };
 
-struct tcphdr* generate_tcp_header(
-    u_int16_t source,
-    u_int16_t destination,
-    u_int32_t seq_num,
-    u_int32_t ack_num,
-    u_int16_t window
-);
-
-struct pseudo_header* generatePseudoHeader(
-    u_int16_t payload_length,
-    const char *source_address,
-    const char *dest_address
-);
-
-void compute_segment_checksum(struct tcphdr *tcpheader, unsigned short *addr, int nbytes);
+struct tcphdr* gen_tcp(uint16_t src, uint16_t dst,
+                       uint32_t seq_num, uint32_t ack_num, uint16_t window);
+struct pseudo_hdr* gen_pseudo_hdr(uint16_t payload_length, const char *src_ip, const char *dst_ip);
+struct pseudo_hdr* gen_pseudo_hdr2(uint16_t pay_len, uint32_t src_ip, uint32_t dst_ip);
+void compute_segment_checksum(struct tcphdr *tcp_hdr, unsigned short *addr, int nbytes);
 
 #define FIN 0x01
 #define SYN 0x02
@@ -52,10 +31,8 @@ void compute_segment_checksum(struct tcphdr *tcpheader, unsigned short *addr, in
 #define ECE 0x40
 #define CWR 0x80
 
-void set_segment_flags(struct tcphdr *tcphdr, int flags);
+void set_segment_flags(struct tcphdr *tcp_hdr, int flags);
+void set_segment_seq_num(struct tcphdr *tcp_hdr, uint32_t bytes);
+void set_segment_port(struct tcphdr *tcp_hdr, uint16_t bytes);
 
-void set_segment_seq_num(struct tcphdr *tcphdr, u_int32_t bytes);
-
-void set_segment_port(struct tcphdr *tcphdr, u_int16_t bytes);
-
-#endif
+#endif  //__SEGMENT_H__
